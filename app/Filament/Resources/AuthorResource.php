@@ -20,20 +20,39 @@ class AuthorResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
     public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\TextInput::make('name')
-                    ->required(),
-                Forms\Components\TextInput::make('username')
-                    ->required(),
-                Forms\Components\FileUpload::make('avatar')
-                    ->image()
-                    ->required(),
-                Forms\Components\Textarea::make('bio')
-                    ->required()
-            ]);
-    }
+{
+    return $form
+        ->schema([
+            Forms\Components\TextInput::make('name')
+                ->required()
+                ->rules([
+                    fn ($record) => \Illuminate\Validation\Rule::unique('authors', 'name')->ignore($record),
+                ])
+                ->label('Nama Penulis')
+                ->validationMessages([
+                    'unique' => 'Nama penulis ini sudah digunakan.',
+                    'required' => 'Nama penulis wajib diisi.',
+                ]),
+
+            Forms\Components\TextInput::make('username')
+                ->required()
+                ->rules([
+                    fn ($record) => \Illuminate\Validation\Rule::unique('authors', 'username')->ignore($record),
+                ])
+                ->label('Username')
+                ->validationMessages([
+                    'unique' => 'Username sudah digunakan.',
+                    'required' => 'Username wajib diisi.',
+                ]),
+
+            Forms\Components\FileUpload::make('avatar')
+                ->image()
+                ->required(),
+
+            Forms\Components\Textarea::make('bio')
+                ->required(),
+        ]);
+}
 
     public static function table(Table $table): Table
     {

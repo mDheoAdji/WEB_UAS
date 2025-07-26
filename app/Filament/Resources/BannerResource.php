@@ -20,14 +20,23 @@ class BannerResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-photo';
 
     public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\Select::make('news_id')
-                    ->relationship('news', 'title')
-                    ->required(),
-            ]);
-    }
+{
+    return $form
+        ->schema([
+            Forms\Components\Select::make('news_id')
+                ->relationship('news', 'title')
+                ->required()
+                ->rules([
+                    fn ($record) => \Illuminate\Validation\Rule::unique('banners', 'news_id')->ignore($record),
+                ])
+                ->label('Judul Berita')
+                ->validationMessages([
+                    'unique' => 'Banner untuk berita ini sudah ada.',
+                    'required' => 'Berita wajib dipilih.',
+                ]),
+        ]);
+}
+
 
     public static function table(Table $table): Table
     {

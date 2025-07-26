@@ -14,6 +14,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class NewsResource extends Resource
 {
@@ -21,32 +22,54 @@ class NewsResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-newspaper';
 
-    public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                Forms\Components\Select::make('author_id')
-                    ->relationship('author', 'name')
-                    ->required(),
-                Forms\Components\Select::make('news_category_id')
-                    ->relationship('newsCategory', 'title')
-                    ->required(),
-                Forms\Components\TextInput::make('title')
-                    ->live(onBlur: true)
-                    ->afterStateUpdated(fn(Set $set, ?string $state) => $set('slug', Str::slug($state)))
-                    ->required(),
-                Forms\Components\TextInput::make('slug')
-                    ->readOnly(),
-                Forms\Components\FileUpload::make('thumbnail')
-                    ->image()
-                    ->required()
-                    ->columnSpanFull(),
-                Forms\Components\RichEditor::make('content')
-                    ->required()
-                    ->columnSpanFull(),
-                Forms\Components\Toggle::make('is_featured')
-            ]);
-    }
+public static function form(Form $form): Form
+{
+    return $form
+        ->schema([
+            Forms\Components\Select::make('author_id')
+                ->relationship('author', 'name')
+                ->required(),
+
+            Forms\Components\Select::make('news_category_id')
+                ->relationship('newsCategory', 'title')
+                ->required(),
+
+            Forms\Components\TextInput::make('title')
+                ->live(onBlur: true)
+                ->afterStateUpdated(fn(Set $set, ?string $state) => $set('slug', Str::slug($state)))
+                ->required()
+                ->rules([
+                    fn ($record) => Rule::unique('news', 'title')->ignore($record),
+                ])
+                ->label('Judul Berita')
+                ->validationMessages([
+                    'required' => 'Judul berita wajib diisi.',
+                    'unique' => 'Judul berita ini sudah digunakan.',
+                ]),
+
+            Forms\Components\TextInput::make('slug')
+                ->readOnly()
+                ->required()
+                ->rules([
+                    fn ($record) => Rule::unique('news', 'slug')->ignore($record),
+                ])
+                ->validationMessages([
+                    'required' => 'Slug tidak boleh kosong.',
+                    'unique' => 'Slug ini sudah digunakan.',
+                ]),
+
+            Forms\Components\FileUpload::make('thumbnail')
+                ->image()
+                ->required()
+                ->columnSpanFull(),
+
+            Forms\Components\RichEditor::make('content')
+                ->required()
+                ->columnSpanFull(),
+
+            Forms\Components\Toggle::make('is_featured')
+        ]);
+}
 
     public static function table(Table $table): Table
     {
